@@ -1,7 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 
-const FONTS = `@import url('https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&family=DM+Sans:wght@300;400;500&display=swap');`;
-
 const STYLE = `
   * { box-sizing: border-box; margin: 0; padding: 0; }
   :root {
@@ -221,7 +219,7 @@ function usePersisted(key, def) {
   });
   const set = useCallback(v => {
     setVal(v);
-    try { localStorage.setItem(key, JSON.stringify(v)); } catch {}
+    try { localStorage.setItem(key, JSON.stringify(v)); } catch {};
   }, [key]);
   return [val, set];
 }
@@ -372,7 +370,12 @@ function CalorieModule({ calorieData, setCalorieData }) {
     try {
       const res = await fetch("https://api.anthropic.com/v1/messages", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "x-api-key": import.meta.env.VITE_ANTHROPIC_API_KEY,
+          "anthropic-version": "2023-06-01",
+          "anthropic-dangerous-direct-browser-access": "true"
+        },
         body: JSON.stringify({
           model: "claude-sonnet-4-20250514",
           max_tokens: 1000,
@@ -400,8 +403,8 @@ function CalorieModule({ calorieData, setCalorieData }) {
           }
         }));
       }
-    } catch {
-      setMessages(prev => [...prev, { id: Date.now() + 1, role: "ai", text: "connection error — try again", time: fmt(new Date()) }]);
+    } catch (err) {
+      setMessages(prev => [...prev, { id: Date.now() + 1, role: "ai", text: "connection error — check your API key in Vercel environment variables", time: fmt(new Date()) }]);
     }
     setLoading(false);
   };
@@ -445,7 +448,7 @@ function CalorieModule({ calorieData, setCalorieData }) {
         </div>
         <div className="chat-messages" style={{ flex: 1 }}>
           {messages.map(m => (
-            <div key={m.id} className={`chat-msg ${m.role}${loading && m.id === messages[messages.length - 1].id && m.role === "ai" ? " loading" : ""}`}>
+            <div key={m.id} className={`chat-msg ${m.role}`}>
               <div className="chat-bubble">{m.text}</div>
               <div className="chat-time">{m.time}</div>
             </div>
@@ -639,7 +642,7 @@ export default function LifeOS() {
 
   return (
     <>
-      <style>{FONTS + STYLE}</style>
+      <style>{STYLE}</style>
       <div className="os-shell">
         <div className="topbar">
           <div className="topbar-left">
